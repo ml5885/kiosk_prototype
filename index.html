@@ -4,8 +4,177 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Automated Mailing Package Kiosk</title>
+	<link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-	
+    <div class="kiosk">
+        <div id="welcome" class="screen active">
+            <span>
+                <h2>Domestic Handling & Courier Services</h2>
+                <p>Welcome to DHCS Automated Package Mailing Kiosk</p>
+            </span>
+            <button onclick="showScreen('weight')">START</button>
+        </div>
+
+        <div id="weight" class="screen">
+            <h2>Package Weight</h2>
+            <p>Place your package on the scale below:</p>
+            <p id="weightDisplay">0.00 kg</p>
+            <button onclick="simulateWeighing()">WEIGH PACKAGE</button>
+            <button onclick="showScreen('address')">NEXT</button>
+            <button onclick="showScreen('welcome')">BACK</button>
+        </div>
+
+        <div id="address" class="screen">
+            <h2>Enter Address</h2>
+            <input type="text" id="streetAddress" placeholder="Street Address" onfocus="showKeyboard('streetAddress')" required>
+            <input type="text" id="zipCode" placeholder="Zip Code" onfocus="showKeyboard('zipCode')" required>
+            <button onclick="validateAddress()">NEXT</button>
+            <button onclick="showScreen('weight')">BACK</button>
+        </div>
+
+        <div id="shipping" class="screen">
+            <h2>Select Shipping Option</h2>
+            <div class="checkbox-container">
+                <label>
+                    <input type="radio" name="shippingOption" value="12.00">
+                    Overnight - $12.00
+                </label>
+                <label>
+                    <input type="radio" name="shippingOption" value="8.00">
+                    2-Day - $8.00
+                </label>
+                <label>
+                    <input type="radio" name="shippingOption" value="4.99">
+                    Ground - $4.99
+                </label>
+            </div>
+            <button onclick="validateShipping()">NEXT</button>
+            <button onclick="showScreen('address')">BACK</button>
+        </div>
+
+        <div id="payment" class="screen">
+            <h2>Payment</h2>
+            <p id="paymentAmount">Total Amount: <b>$</b><span id="totalAmount">0.00</span></p>
+            <p>Please tap your card on the machine below:</p>
+            <button onclick="simulateCardTap()">TAP CREDIT CARD</button>
+            <button onclick="showScreen('shipping')">BACK</button>
+        </div>
+
+        <div id="receipt" class="screen">
+            <h2>Receipt</h2>
+            <p>Your package is on its way!</p>
+            <div class="receipt-details">
+                <p><strong>Total Amount:</strong> <b>$</b><span id="receiptAmount">0.00</span></p>
+                <p><strong>Destination Address:</strong> <span id="receiptAddress"></span></p>
+                <p><strong>Shipping Option:</strong> <span id="receiptShipping"></span></p>
+            </div>
+            <button onclick="resetAndShowHome()">RETURN TO HOME SCREEN</button>
+            <button onclick="printReceipt()">PRINT RECEIPT</button>
+        </div>
+
+        <div class="keyboard" id="keyboard">
+            <button onclick="simulateTyping()">Autofill</button>
+            <button onclick="hideKeyboard()">Done</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '';
+        let packageWeight = 0;
+        let selectedShippingCost = 0;
+        let selectedShippingOption = '';
+        let address = '';
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showKeyboard(inputId) {
+            currentInput = inputId;
+            document.getElementById('keyboard').style.display = 'block';
+        }
+
+        function hideKeyboard() {
+            document.getElementById('keyboard').style.display = 'none';
+        }
+
+        function simulateTyping() {
+            if (currentInput === 'streetAddress') {
+                document.getElementById(currentInput).value = "100 Main St.";
+            } else if (currentInput === 'zipCode') {
+                document.getElementById(currentInput).value = "15213";
+            }
+            hideKeyboard();
+        }
+
+        function simulateWeighing() {
+            packageWeight = (Math.random() * 1 + 3).toFixed(2);
+            document.getElementById('weightDisplay').textContent = packageWeight + " kg";
+        }
+
+        function validateAddress() {
+            const streetAddress = document.getElementById('streetAddress').value;
+            const zipCode = document.getElementById('zipCode').value;
+
+            if (streetAddress.trim() === '' || zipCode.trim() === '') {
+                alert('Please fill out both the street address and zip code.');
+            } else {
+                address = streetAddress + ', ' + zipCode;
+                showScreen('shipping');
+            }
+        }
+
+        function validateShipping() {
+            const radioButtons = document.querySelectorAll('input[name="shippingOption"]');
+            selectedShippingCost = 0;
+            selectedShippingOption = '';
+
+            radioButtons.forEach(radio => {
+                if (radio.checked) {
+                    selectedShippingCost = parseFloat(radio.value).toFixed(2);
+                    selectedShippingOption = radio.parentNode.textContent.trim();
+                }
+            });
+
+            if (selectedShippingCost && selectedShippingOption) {
+                document.getElementById('totalAmount').textContent = selectedShippingCost;
+                showScreen('payment');
+            } else {
+                alert("Please select a shipping option.");
+            }
+        }
+
+        function simulateCardTap() {
+            document.getElementById('receiptAmount').textContent = selectedShippingCost;
+            document.getElementById('receiptAddress').textContent = address;
+            document.getElementById('receiptShipping').textContent = selectedShippingOption;
+            alert("Card tapped successfully!");
+            showScreen('receipt');
+        }
+
+        function printReceipt() {
+            alert("Receipt printed!");
+        }
+
+        function resetAndShowHome() {
+		    packageWeight = 0;
+		    document.getElementById('weightDisplay').textContent = "0.00 kg";
+		    
+		    document.getElementById('streetAddress').value = "";
+		    document.getElementById('zipCode').value = "";
+		    
+		    const radioButtons = document.querySelectorAll('input[name="shippingOption"]');
+		    radioButtons.forEach(radio => radio.checked = false);
+		    
+		    document.getElementById('totalAmount').textContent = "0.00";
+		    document.getElementById('receiptAmount').textContent = "0.00";
+		    document.getElementById('receiptAddress').textContent = "";
+		    document.getElementById('receiptShipping').textContent = "";
+		    
+		    showScreen('welcome');
+		}
+    </script>
 </body>
 </html>
